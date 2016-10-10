@@ -74,4 +74,8 @@ public class ARAdapter {
 		}
 		return array;
 	}
+	
+	public ARServerUser getARS() {
+		return ars;
+	}
 }
