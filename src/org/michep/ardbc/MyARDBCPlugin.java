@@ -64,7 +64,10 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		subquery.addFromSource(subqueryForm);
 		subquery.addFromField(Integer.parseInt(configOptions.get("Subquery Form Relation FieldID")), subqueryForm);
 
-		adaptQualifier(qualifier, subqueryForm);
+		Map<Integer, Value> oneEntryValues = new HashMap<Integer, Value>();
+		adaptQualifier(qualifier, subqueryForm, oneEntryValues);
+
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + qualifier);
 
 		RegularQuery oneEntryQuery = new RegularQuery();
 		oneEntryQuery.addFromSource(subqueryForm);
@@ -75,11 +78,11 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		oneEntryQuery.setQualifier(qualifier);
 		List<QuerySourceValues> oneEntryResult = adapter.getARS().getListEntryObjects(oneEntryQuery, 0, 1, false, null);
 
-		Map<Integer, Value> oneEntryValues = new HashMap<Integer, Value>();
+//		Map<Integer, Value> oneEntryValues = new HashMap<Integer, Value>();
 		if (oneEntryResult.size() > 0)
 			oneEntryValues = oneEntryResult.get(0).get(subqueryForm);
 
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + qualifier);
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "oneEntryValues = " + oneEntryValues);
 
 		subquery.setQualifier(qualifier);
 
@@ -133,24 +136,29 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		return entryList;
 	}
 
-	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm) {
+	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm, Map<Integer, Value> valuesFromQual) {
+		int fieldId;
 		int qualOperation = inQual.getOperation();
 		if (qualOperation == Constants.AR_COND_OP_NOT)
 			return;
 		if ((qualOperation == Constants.AR_COND_OP_AND) || (qualOperation == Constants.AR_COND_OP_OR)) {
-			adaptQualifier(inQual.getLeftOperand(), subqueryForm);
-			adaptQualifier(inQual.getRightOperand(), subqueryForm);
+			adaptQualifier(inQual.getLeftOperand(), subqueryForm, valuesFromQual);
+			adaptQualifier(inQual.getRightOperand(), subqueryForm, valuesFromQual);
 		}
 		if (qualOperation == Constants.AR_COND_OP_NOT)
-			adaptQualifier(inQual.getNotOperand(), subqueryForm);
+			adaptQualifier(inQual.getNotOperand(), subqueryForm, valuesFromQual);
 		if (qualOperation == Constants.AR_COND_OP_REL_OP) {
 			if (inQual.getRelationalOperationInfo().getLeftOperand().getType() == OperandType.FIELDID) {
-				int fieldId = ((Integer) inQual.getRelationalOperationInfo().getLeftOperand().getValue()).intValue();
+				fieldId = ((Integer) inQual.getRelationalOperationInfo().getLeftOperand().getValue()).intValue();
+				if (inQual.getRelationalOperationInfo().getRightOperand().getType() == OperandType.VALUE) 
+					valuesFromQual.put(fieldId, (Value)inQual.getRelationalOperationInfo().getRightOperand().getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
 				inQual.getRelationalOperationInfo().setLeftOperand(op);
 			}
 			if (inQual.getRelationalOperationInfo().getRightOperand().getType() == OperandType.FIELDID) {
-				int fieldId = ((Integer) inQual.getRelationalOperationInfo().getRightOperand().getValue()).intValue();
+				fieldId = ((Integer) inQual.getRelationalOperationInfo().getRightOperand().getValue()).intValue();
+				if (inQual.getRelationalOperationInfo().getLeftOperand().getType() == OperandType.VALUE) 
+					valuesFromQual.put(fieldId, (Value)inQual.getRelationalOperationInfo().getLeftOperand().getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
 				inQual.getRelationalOperationInfo().setRightOperand(op);
 			}

@@ -20,29 +20,29 @@ public class ARAdapter {
 	private ARServerUser ars = new ARServerUser();
 
 	public ARAdapter(ARPluginContext ctx) throws ARException {
-//		String server = ctx.getARConfigEntry("Server-Connect-Name");
-//		if ((server == null) || (server.length() == 0))
-//			server = ctx.getARConfigEntry("Server-Name");
-//		String pass = ctx.getARConfigEntry("Remedy-App-Service-Password");
-//		pass = new ARUtilEgcp().GCEUtilApp(pass);
-//		ars = new ARServerUser("Remedy Application Service", pass, "", null, server);
-//		String port = ctx.getARConfigEntry("TCD-Specific-Port");
-//		int localport;
-//		if ((port != null) && (port.length() > 0)) {
-//			try {
-//				localport = Integer.parseInt(port);
-//				if (localport != 0)
-//					ars.setPort(localport);
-//			} catch (NumberFormatException e) {
-//				ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_ERROR, "Error converting parameter TCD-Specific-Port value " + port);
-//			}
-//		}
-		ars.setNativeAuthenticationInfo(ctx);
+		String server = ctx.getARConfigEntry("Server-Connect-Name");
+		if ((server == null) || (server.length() == 0))
+			server = ctx.getARConfigEntry("Server-Name");
+		String pass = ctx.getARConfigEntry("Remedy-App-Service-Password");
+		pass = new ARUtilEgcp().GCEUtilApp(pass);
+		ars = new ARServerUser("Remedy Application Service", pass, "", null, server);
+		String port = ctx.getARConfigEntry("TCD-Specific-Port");
+		int localport;
+		if ((port != null) && (port.length() > 0)) {
+			try {
+				localport = Integer.parseInt(port);
+				if (localport != 0)
+					ars.setPort(localport);
+			} catch (NumberFormatException e) {
+				ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_ERROR, "Error converting parameter TCD-Specific-Port value " + port);
+			}
+		}
+//		ars.setNativeAuthenticationInfo(ctx);
 		ars.login();
 	}
 	
 	public void impersonateUser(String userName) throws ARException {
-		//ars.impersonateUser(userName);
+		ars.impersonateUser(userName);
 	}
 
 	public List<Entry> getEntries(String form, String qualification, Map<Integer, String> fields) throws ARException {
