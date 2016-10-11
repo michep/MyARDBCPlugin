@@ -64,29 +64,24 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		subquery.addFromSource(subqueryForm);
 		subquery.addFromField(Integer.parseInt(configOptions.get("Subquery Form Relation FieldID")), subqueryForm);
 
-		QualifierInfo subqueryQual = qualifier;
-		adaptQualifier(subqueryQual, subqueryForm);
+		adaptQualifier(qualifier, subqueryForm);
 
-		// *************
-
-		RegularQuery rq1 = new RegularQuery();
-		rq1.addFromSource(subqueryForm);
-		List<Integer> sourceFieldIDList = adapter.getARS().getListField(configOptions.get("Subquery Form Name"), Constants.AR_FIELD_TYPE_DATA, 0);
-		for (int fieldid : sourceFieldIDList)
+		RegularQuery oneEntryQuery = new RegularQuery();
+		oneEntryQuery.addFromSource(subqueryForm);
+		List<Integer> subqueryFormFieldIDList = adapter.getARS().getListField(configOptions.get("Subquery Form Name"), Constants.AR_FIELD_TYPE_DATA, 0);
+		for (int fieldid : subqueryFormFieldIDList)
 			if (fieldid != 15)
-				rq1.addFromField(fieldid, subqueryForm);
-		rq1.setQualifier(subqueryQual);
-		List<QuerySourceValues> res1 = adapter.getARS().getListEntryObjects(rq1, 0, 1, false, null);
+				oneEntryQuery.addFromField(fieldid, subqueryForm);
+		oneEntryQuery.setQualifier(qualifier);
+		List<QuerySourceValues> oneEntryResult = adapter.getARS().getListEntryObjects(oneEntryQuery, 0, 1, false, null);
 
-		Map<Integer, Value> resvalmap1 = new HashMap<Integer, Value>();
-		if (res1.size() > 0)
-			resvalmap1 = res1.get(0).get(subqueryForm);
+		Map<Integer, Value> oneEntryValues = new HashMap<Integer, Value>();
+		if (oneEntryResult.size() > 0)
+			oneEntryValues = oneEntryResult.get(0).get(subqueryForm);
 
-		// *************
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + qualifier);
 
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + subqueryQual);
-
-		subquery.setQualifier(subqueryQual);
+		subquery.setQualifier(qualifier);
 
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subquery done");
 
@@ -124,15 +119,14 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 				for (ARVendorField vendorField : fieldsList) {
 					int fid = vendorField.getFieldId();
-					if (resvalmap1.containsKey(fid) && fid != 1)
-						values.put(fid, resvalmap1.get(fid));
+					if (oneEntryValues.containsKey(fid) && fid != 1)
+						values.put(fid, oneEntryValues.get(fid));
 				}
-				
+
 				entryList.add(new Entry(values));
 			}
 			start = entryList.size();
 		} while (start < nMatch.intValue());
-
 
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "entryList = " + entryList);
 		numMatches.setValue(entryList.size());
@@ -205,9 +199,9 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		// vendorFieldList.add(vendorField);
 		return vendorFieldList;
 	}
-	
+
 	private void log(int level, String message) {
-		if(debug)
+		if (debug)
 			ctx.logMessage(level, message);
 	}
 }
