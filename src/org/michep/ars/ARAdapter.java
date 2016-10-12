@@ -66,6 +66,10 @@ public class ARAdapter {
 		ars.logout();
 	}
 
+	public List<Integer> getListField(String formName, int fieldType) throws ARException {
+		return ars.getListField(formName, fieldType, 0);
+	}
+	
 	private int[] set2array(Set<Integer> set) {
 		int size = set.size();
 		int[] array = new int[size];
@@ -74,9 +78,5 @@ public class ARAdapter {
 			array[i++] = val;
 		}
 		return array;
-	}
-	
-	public ARServerUser getARS() {
-		return ars;
 	}
 }
