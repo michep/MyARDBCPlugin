@@ -137,7 +137,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm, Map<Integer, Value> valuesFromQual) {
 		int fieldId;
 		int qualOperation = inQual.getOperation();
-		if (qualOperation == Constants.AR_COND_OP_NOT)
+		if (qualOperation == Constants.AR_COND_OP_NONE)
 			return;
 		if ((qualOperation == Constants.AR_COND_OP_AND) || (qualOperation == Constants.AR_COND_OP_OR)) {
 			adaptQualifier(inQual.getLeftOperand(), subqueryForm, valuesFromQual);

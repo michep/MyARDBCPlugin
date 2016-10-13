@@ -40,7 +40,7 @@ public class ARAdapter {
 //		ars.setNativeAuthenticationInfo(ctx);
 		ars.login();
 	}
-	
+
 	public void impersonateUser(String userName) throws ARException {
 		ars.impersonateUser(userName);
 	}
@@ -57,11 +57,11 @@ public class ARAdapter {
 	public List<Field> getFields(String form, Map<Integer, String> fields) throws ARException {
 		return ars.getListFieldObjects(form, set2array(fields.keySet()));
 	}
-	
+
 	public List<QuerySourceValues> getListEntryObjects(RegularQuery query, int firstRetrieve, int maxRetrieve, boolean useLocale, OutputInteger nMatches) throws ARException {
 		return ars.getListEntryObjects(query, firstRetrieve, maxRetrieve, useLocale, nMatches);
 	}
-	
+
 	public void terminate() {
 		ars.logout();
 	}
@@ -69,7 +69,7 @@ public class ARAdapter {
 	public List<Integer> getListField(String formName, int fieldType) throws ARException {
 		return ars.getListField(formName, fieldType, 0);
 	}
-	
+
 	private int[] set2array(Set<Integer> set) {
 		int size = set.size();
 		int[] array = new int[size];
