@@ -14,8 +14,8 @@ import com.bmc.arsys.api.Value;
 
 public class AREntry {
 
-	private Map<String, Value> mapByFieldName = new HashMap<String, Value>();
-	private Map<Integer, Value> mapByFieldID = new HashMap<Integer, Value>();
+	private Map<String, Value> mapByFieldName = new HashMap<>();
+	private Map<Integer, Value> mapByFieldID = new HashMap<>();
 	private Map<Integer, String> fields;
 	private Entry entry;
 	private List<Field> fieldList;
@@ -29,8 +29,8 @@ public class AREntry {
 		this.fieldList = fieldList;
 		this.fields = fields;
 		for (int fid : fields.keySet()) {
-			mapByFieldID.put(fid, (Value) entry.get(fid));
-			mapByFieldName.put(fields.get(fid), (Value) entry.get(fid));
+			mapByFieldID.put(fid, entry.get(fid));
+			mapByFieldName.put(fields.get(fid), entry.get(fid));
 		}
 	}
 
@@ -63,11 +63,10 @@ public class AREntry {
 					break;
 				}
 			}
-		} else if (dataType == Constants.AR_DATA_TYPE_INTEGER || dataType == Constants.AR_DATA_TYPE_TIME) {
+		} else if (dataType == Constants.AR_DATA_TYPE_INTEGER || dataType == Constants.AR_DATA_TYPE_TIME)
 			v = new Value(Integer.parseInt(value), DataType.INTEGER);
-		} else if (dataType == Constants.AR_DATA_TYPE_CHAR) {
+		else if (dataType == Constants.AR_DATA_TYPE_CHAR)
 			v = new Value(value, DataType.CHAR);
-		}
 		mapByFieldID.put(fieldID, v);
 		mapByFieldName.put(fields.get(fieldID), v);
 	}
