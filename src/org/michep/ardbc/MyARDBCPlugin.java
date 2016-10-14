@@ -64,7 +64,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		subquery.addFromSource(subqueryForm);
 		subquery.addFromField(Integer.parseInt(configOptions.get("Subquery Form Relation FieldID")), subqueryForm);
 
-		Map<Integer, Value> oneEntryValues = new HashMap<Integer, Value>();
+		Map<Integer, Value> oneEntryValues = new HashMap<>();
 		adaptQualifier(qualifier, subqueryForm, oneEntryValues);
 
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + qualifier);
@@ -104,7 +104,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery qual done");
 
-		List<Entry> entryList = new ArrayList<Entry>();
+		List<Entry> entryList = new ArrayList<>();
 		List<QuerySourceValues> result;
 		Map<Integer, Value> values;
 		int start = 0;
@@ -115,7 +115,6 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 			log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "result = " + result);
 			for (QuerySourceValues queryResVal : result) {
 				log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "queryResVal = " + queryResVal);
-				values = new HashMap<Integer, Value>();
 				values = queryResVal.get(mainForm);
 				log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "values = " + values);
 
@@ -149,14 +148,14 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 			ArithmeticOrRelationalOperand opLeft = inQual.getRelationalOperationInfo().getLeftOperand();
 			ArithmeticOrRelationalOperand opRight = inQual.getRelationalOperationInfo().getRightOperand();
 			if (opLeft.getType() == OperandType.FIELDID) {
-				fieldId = ((Integer) opLeft.getValue()).intValue();
+				fieldId = (Integer) opLeft.getValue();
 				if (opRight.getType() == OperandType.VALUE)
 					valuesFromQual.put(fieldId, (Value) opRight.getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
 				inQual.getRelationalOperationInfo().setLeftOperand(op);
 			}
 			if (opRight.getType() == OperandType.FIELDID) {
-				fieldId = ((Integer) opRight.getValue()).intValue();
+				fieldId = (Integer) opRight.getValue();
 				if (opLeft.getType() == OperandType.VALUE)
 					valuesFromQual.put(fieldId, (Value) opLeft.getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
@@ -172,12 +171,11 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "fieldsList = " + fieldsList);
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "transId = " + transId);
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "entryId = " + entryId);
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "idList = " + idList);
-		Map<Integer, Value> values = new HashMap<Integer, Value>();
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "idList = " + idList.toString());
+		Map<Integer, Value> values = new HashMap<>();
 		values.put(1, new Value(entryId));
 		values.put(8, new Value(""));
-		Entry entry = new Entry(values);
-		return entry;
+		return new Entry(values);
 	}
 
 	@Override
@@ -189,7 +187,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 	@Override
 	public List<VendorForm> getListForms(ARPluginContext ctx) throws ARException {
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getListForms()");
-		List<VendorForm> vendorFormList = new ArrayList<VendorForm>();
+		List<VendorForm> vendorFormList = new ArrayList<>();
 		for (String configName : config.getConfigNames()) {
 			vendorFormList.add(new VendorForm(ctx.getPluginInfo().getName(), configName));
 			log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "config name = " + configName);
@@ -201,8 +199,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 	@Override
 	public List<ARVendorField> getMultipleFields(ARPluginContext ctx, VendorForm vendorForm) throws ARException {
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getMultipleFields()");
-		List<ARVendorField> vendorFieldList = new ArrayList<ARVendorField>();
-		return vendorFieldList;
+		return new ArrayList<>();
 	}
 
 	private void log(int level, String message) {
