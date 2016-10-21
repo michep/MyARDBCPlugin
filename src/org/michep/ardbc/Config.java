@@ -18,7 +18,7 @@ public class Config {
 
 	private ARForm formConfig;
 	private ARForm formQuery;
-	private List<String> configFieldNames = Arrays.asList("Primary Form Name", "Primary Form Result FieldID", "Primary Form Relation FieldID", "Subquery Operation", "Subquery Form Name", "Subquery Form Relation FieldID");
+	private List<String> configFieldNames = Arrays.asList("Primary Form Name", "Primary Form Result FieldIDs", "Primary Form Relation FieldID", "Subquery Operation", "Subquery Form Name", "Subquery Form Relation FieldID");
 	private List<String> queryFieldNames = Arrays.asList("Primary Form Qual", "Subquery Form Qual");
 
 	public Map<String, Map<String, String>> config = new HashMap<String, Map<String, String>>();
@@ -41,7 +41,7 @@ public class Config {
 		Map<Integer, String> fields = new HashMap<>();
 		fields.put(8, "Description");
 		fields.put(400000000, "Primary Form Name");
-		fields.put(400000001, "Primary Form Result FieldID");
+		fields.put(400000001, "Primary Form Result FieldIDs");
 		fields.put(400000002, "Primary Form Relation FieldID");
 		fields.put(400000003, "Subquery Operation");
 		fields.put(400000004, "Subquery Form Name");

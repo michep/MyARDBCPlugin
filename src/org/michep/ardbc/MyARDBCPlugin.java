@@ -67,7 +67,11 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		subquery.addFromSource(subqueryForm);
 		subquery.addFromField(Integer.parseInt(configOptions.get("Subquery Form Relation FieldID")), subqueryForm);
 		
-		QualifierInfo subqueryQualInfo = adapter.parseQualification(configOptions.get("Subquery Form Name"), queryEntry.getFieldStringValue("Subquery Form Qual"));
+		
+		String qualParam = queryEntry.getFieldStringValue("Subquery Form Qual");
+		if(qualParam == null)
+			qualParam = "1=1";
+		QualifierInfo subqueryQualInfo = adapter.parseQualification(configOptions.get("Subquery Form Name"), qualParam);
 		adaptQualifier(subqueryQualInfo, subqueryForm);
 
 		subquery.setQualifier(subqueryQualInfo);
@@ -78,11 +82,15 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 		QuerySourceForm mainForm = new QuerySourceForm(configOptions.get("Primary Form Name"));
 		mainQuery.addFromSource(mainForm);
-		String[] fieldIDs = configOptions.get("Primary Form Result FieldID").split(",");
+		String[] fieldIDs = configOptions.get("Primary Form Result FieldIDs").split(",");
 		for (String fid : fieldIDs)			
 			mainQuery.addFromField(Integer.parseInt(fid), mainForm);
 
-		QualifierInfo mainQualInfo = adapter.parseQualification(configOptions.get("Primary Form Name"), queryEntry.getFieldStringValue("Primary Form Qual"));
+		
+		qualParam = queryEntry.getFieldStringValue("Primary Form Qual");
+		if(qualParam == null)
+			qualParam = "1=1";
+		QualifierInfo mainQualInfo = adapter.parseQualification(configOptions.get("Primary Form Name"), qualParam);
 		adaptQualifier(mainQualInfo, mainForm);
 
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery = " + mainQualInfo);
