@@ -47,6 +47,10 @@ public class ARAdapter {
 
 	public List<Entry> getEntries(String form, String qualification, Map<Integer, String> fields) throws ARException {
 		QualifierInfo qualInfo = ars.parseQualification(form, qualification);
+		return getEntries(form, qualInfo, fields);
+	}
+
+	public List<Entry> getEntries(String form, QualifierInfo qualInfo, Map<Integer, String> fields) throws ARException {
 		return ars.getListEntryObjects(form, qualInfo, 0, -1, null, set2array(fields.keySet()), false, null);
 	}
 
@@ -68,6 +72,10 @@ public class ARAdapter {
 
 	public List<Integer> getListField(String formName, int fieldType) throws ARException {
 		return ars.getListField(formName, fieldType, 0);
+	}
+	
+	public QualifierInfo parseQualification(String formName, String qual) throws ARException {
+		return ars.parseQualification(formName, qual);
 	}
 
 	private int[] set2array(Set<Integer> set) {

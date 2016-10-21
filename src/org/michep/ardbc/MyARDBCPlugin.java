@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.michep.ars.ARAdapter;
+import org.michep.ars.AREntry;
 
 import com.bmc.arsys.api.ARException;
 import com.bmc.arsys.api.ArithmeticOrRelationalOperand;
@@ -56,6 +57,8 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "numMatches = " + numMatches);
 
 		config.loadConfig();
+		
+		AREntry queryEntry = config.loadQuery(qualifier);
 
 		Map<String, String> configOptions = config.getConfigOptions(tableName);
 
@@ -63,46 +66,35 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		ValueSetQuery subquery = new ValueSetQuery();
 		subquery.addFromSource(subqueryForm);
 		subquery.addFromField(Integer.parseInt(configOptions.get("Subquery Form Relation FieldID")), subqueryForm);
+		
+		QualifierInfo subqueryQualInfo = adapter.parseQualification(configOptions.get("Subquery Form Name"), queryEntry.getFieldStringValue("Subquery Form Qual"));
+		adaptQualifier(subqueryQualInfo, subqueryForm);
 
-		Map<Integer, Value> oneEntryValues = new HashMap<>();
-		adaptQualifier(qualifier, subqueryForm, oneEntryValues);
+		subquery.setQualifier(subqueryQualInfo);
 
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subqueryQual v3 = " + qualifier);
-
-//		RegularQuery oneEntryQuery = new RegularQuery();w
-//		oneEntryQuery.addFromSource(subqueryForm);
-//		List<Integer> subqueryFormFieldIDList = adapter.getListField(configOptions.get("Subquery Form Name"), Constants.AR_FIELD_TYPE_DATA);
-//		for (int fieldid : subqueryFormFieldIDList)
-//			if (fieldid != 15)
-//				oneEntryQuery.addFromField(fieldid, subqueryForm);
-//		oneEntryQuery.setQualifier(qualifier);
-//		List<QuerySourceValues> oneEntryResult = adapter.getListEntryObjects(oneEntryQuery, 0, 1, false, null);
-//
-//		if (oneEntryResult.size() > 0)
-//			oneEntryValues = oneEntryResult.get(0).get(subqueryForm);
-
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "oneEntryValues = " + oneEntryValues);
-
-		subquery.setQualifier(qualifier);
-
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subquery done");
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subquery = " + subqueryQualInfo);
 
 		RegularQuery mainQuery = new RegularQuery();
 
 		QuerySourceForm mainForm = new QuerySourceForm(configOptions.get("Primary Form Name"));
 		mainQuery.addFromSource(mainForm);
-		mainQuery.addFromField(Integer.parseInt(configOptions.get("Primary Form Result FieldID")), mainForm);
+		String[] fieldIDs = configOptions.get("Primary Form Result FieldID").split(",");
+		for (String fid : fieldIDs)			
+			mainQuery.addFromField(Integer.parseInt(fid), mainForm);
 
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery done");
+		QualifierInfo mainQualInfo = adapter.parseQualification(configOptions.get("Primary Form Name"), queryEntry.getFieldStringValue("Primary Form Qual"));
+		adaptQualifier(mainQualInfo, mainForm);
+
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery = " + mainQualInfo);
 
 		ArithmeticOrRelationalOperand mainFieldOp = new ArithmeticOrRelationalOperand(Integer.parseInt(configOptions.get("Primary Form Relation FieldID")), mainForm);
 		ArithmeticOrRelationalOperand subqueryOp = new ArithmeticOrRelationalOperand(subquery);
 		int clause = configOptions.get("Subquery Operation").equals("0") ? Constants.AR_REL_OP_IN : Constants.AR_REL_OP_NOT_IN;
 		RelationalOperationInfo relOp = new RelationalOperationInfo(clause, mainFieldOp, subqueryOp);
-		QualifierInfo qual = new QualifierInfo(relOp);
+		QualifierInfo qual = new QualifierInfo(Constants.AR_COND_OP_AND, mainQualInfo, new QualifierInfo(relOp));
 		mainQuery.setQualifier(qual);
 
-		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery qual done");
+		log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "full qual = " + qual);
 
 		List<Entry> entryList = new ArrayList<>();
 		List<QuerySourceValues> result;
@@ -114,15 +106,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 			result = adapter.getListEntryObjects(mainQuery, start, 0, false, nMatch);
 			log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "result = " + result);
 			for (QuerySourceValues queryResVal : result) {
-				log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "queryResVal = " + queryResVal);
 				values = queryResVal.get(mainForm);
-				log(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "values = " + values);
-
-				for (ARVendorField vendorField : fieldsList) {
-					int fid = vendorField.getFieldId();
-					if (oneEntryValues.containsKey(fid) && fid != 1)
-						values.put(fid, oneEntryValues.get(fid));
-				}
 				entryList.add(new Entry(values));
 			}
 			start = entryList.size();
@@ -133,31 +117,33 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		return entryList;
 	}
 
-	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm, Map<Integer, Value> valuesFromQual) {
+	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm) {
 		int fieldId;
+		if (inQual == null)
+			return;
 		int qualOperation = inQual.getOperation();
 		if (qualOperation == Constants.AR_COND_OP_NONE)
 			return;
 		if ((qualOperation == Constants.AR_COND_OP_AND) || (qualOperation == Constants.AR_COND_OP_OR)) {
-			adaptQualifier(inQual.getLeftOperand(), subqueryForm, valuesFromQual);
-			adaptQualifier(inQual.getRightOperand(), subqueryForm, valuesFromQual);
+			adaptQualifier(inQual.getLeftOperand(), subqueryForm);
+			adaptQualifier(inQual.getRightOperand(), subqueryForm);
 		}
 		if (qualOperation == Constants.AR_COND_OP_NOT)
-			adaptQualifier(inQual.getNotOperand(), subqueryForm, valuesFromQual);
+			adaptQualifier(inQual.getNotOperand(), subqueryForm);
 		if (qualOperation == Constants.AR_COND_OP_REL_OP) {
 			ArithmeticOrRelationalOperand opLeft = inQual.getRelationalOperationInfo().getLeftOperand();
 			ArithmeticOrRelationalOperand opRight = inQual.getRelationalOperationInfo().getRightOperand();
 			if (opLeft.getType() == OperandType.FIELDID) {
 				fieldId = (Integer) opLeft.getValue();
-				if (opRight.getType() == OperandType.VALUE)
-					valuesFromQual.put(fieldId, (Value) opRight.getValue());
+//				if (opRight.getType() == OperandType.VALUE)
+//					valuesFromQual.put(fieldId, (Value) opRight.getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
 				inQual.getRelationalOperationInfo().setLeftOperand(op);
 			}
 			if (opRight.getType() == OperandType.FIELDID) {
 				fieldId = (Integer) opRight.getValue();
-				if (opLeft.getType() == OperandType.VALUE)
-					valuesFromQual.put(fieldId, (Value) opLeft.getValue());
+//				if (opLeft.getType() == OperandType.VALUE)
+//					valuesFromQual.put(fieldId, (Value) opLeft.getValue());
 				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
 				inQual.getRelationalOperationInfo().setRightOperand(op);
 			}

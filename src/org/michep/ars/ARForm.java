@@ -7,6 +7,7 @@ import java.util.Map;
 import com.bmc.arsys.api.ARException;
 import com.bmc.arsys.api.Entry;
 import com.bmc.arsys.api.Field;
+import com.bmc.arsys.api.QualifierInfo;
 
 public class ARForm {
 	private String formName;
@@ -22,11 +23,22 @@ public class ARForm {
 	}
 
 	public List<AREntry> getEntries() throws ARException {
-		List<Entry> entries = adapter.getEntries(formName, "", fields);
+		return getEntries("");
+	}
+
+	public List<AREntry> getEntries(String qual) throws ARException {
+		List<Entry> entries = adapter.getEntries(formName, qual, fields);
 		List<AREntry> arentries = new ArrayList<AREntry>();
-		for (Entry entry : entries) {
+		for (Entry entry : entries)
 			arentries.add(new AREntry(entry, fields, fieldList));
-		}
+		return arentries;
+	}
+	
+	public List<AREntry> getEntries(QualifierInfo qualInfo) throws ARException {
+		List<Entry> entries = adapter.getEntries(formName, qualInfo, fields);
+		List<AREntry> arentries = new ArrayList<AREntry>();
+		for (Entry entry : entries)
+			arentries.add(new AREntry(entry, fields, fieldList));
 		return arentries;
 	}
 
