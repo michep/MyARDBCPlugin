@@ -31,11 +31,12 @@ import com.bmc.arsys.pluginsvr.plugins.ARVendorField;
 public class MyARDBCPlugin extends ARDBCPlugin {
 	private Config config;
 	private ARAdapter adapter;
-	private static final boolean debug = false;
+	private static final boolean DEBUG = false;
+	private static final int QUERY_GUID_FIELDID = 400000777;
 
 	@Override
 	public void initialize(ARPluginContext ctx) throws ARException {
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "initialize()");
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "initialize()");
 		config = new Config(ctx);
 		adapter = new ARAdapter(ctx);
 	}
@@ -43,7 +44,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 	@Override
 	public List<Entry> getListEntryWithFields(ARPluginContext ctx, String tableName, List<ARVendorField> fieldsList, long transId, QualifierInfo qualifier, List<SortInfo> sortList, List<EntryListFieldInfo> getListFields, int startAt, int maxRetrieve, OutputInteger numMatches) throws ARException {
 		adapter.impersonateUser(ctx.getUser());
-		if(debug) {
+		if(DEBUG) {
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getListEntryWithFields()");
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "formName = " + tableName);
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "fieldList = " + fieldsList);
@@ -72,19 +73,19 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		adaptQualifier(subqueryQualInfo, subqueryForm);
 
 		subquery.setQualifier(subqueryQualInfo);
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subquery = " + subqueryQualInfo);
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "subquery = " + subqueryQualInfo);
 
 		RegularQuery mainQuery = new RegularQuery();
 		QuerySourceForm mainForm = new QuerySourceForm(configOptions.get("Primary Form Name"));
 		mainQuery.addFromSource(mainForm);
-		String[] fieldIDs = configOptions.get("Primary Form Result FieldIDs").split(",");
-		for (String fid : fieldIDs)
-			mainQuery.addFromField(Integer.parseInt(fid), mainForm);
+		for (ARVendorField vf : fieldsList)
+			if (vf.getFieldId() != QUERY_GUID_FIELDID)
+				mainQuery.addFromField(vf.getFieldId(), mainForm);
 
 		qualParam = queryEntry.getFieldStringValue("Primary Form Qual");
 		QualifierInfo mainQualInfo = adapter.parseQualification(configOptions.get("Primary Form Name"), qualParam == null ? "1=1" : qualParam);
 		adaptQualifier(mainQualInfo, mainForm);
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery = " + mainQualInfo);
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "mainquery = " + mainQualInfo);
 
 		ArithmeticOrRelationalOperand mainFieldOp = new ArithmeticOrRelationalOperand(Integer.parseInt(configOptions.get("Primary Form Relation FieldID")), mainForm);
 		ArithmeticOrRelationalOperand subqueryOp = new ArithmeticOrRelationalOperand(subquery);
@@ -92,7 +93,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		RelationalOperationInfo relOp = new RelationalOperationInfo(clause, mainFieldOp, subqueryOp);
 		QualifierInfo qual = new QualifierInfo(Constants.AR_COND_OP_AND, mainQualInfo, new QualifierInfo(relOp));
 		mainQuery.setQualifier(qual);
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "full qual = " + qual);
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "full qual = " + qual);
 
 		List<Entry> entryList = new ArrayList<>();
 		Map<Integer, Value> values;
@@ -102,7 +103,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 			values = queryResVal.get(mainForm);
 			entryList.add(new Entry(values));
 		}
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "entryList = " + entryList);
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "entryList = " + entryList);
 		numMatches.setValue(nMatch.getValue());
 		return entryList;
 	}
@@ -138,7 +139,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 	@Override
 	public Entry getEntry(ARPluginContext ctx, String tableName, List<ARVendorField> fieldsList, long transId, String entryId, int[] idList) throws ARException {
-		if(debug) {
+		if(DEBUG) {
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getEntry()");
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "formName = " + tableName);
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "fieldsList = " + fieldsList);
@@ -154,25 +155,25 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 	@Override
 	public void terminate(ARPluginContext ctx) throws ARException {
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "terminate()");
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "terminate()");
 		adapter.terminate();
 	}
 
 	@Override
 	public List<VendorForm> getListForms(ARPluginContext ctx) throws ARException {
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getListForms()");
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getListForms()");
 		List<VendorForm> vendorFormList = new ArrayList<>();
 		for (String configName : config.getConfigNames()) {
 			vendorFormList.add(new VendorForm(ctx.getPluginInfo().getName(), configName));
-			if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "config name = " + configName);
+			if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "config name = " + configName);
 		}
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "plugin name = " + ctx.getPluginInfo().getName());
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "plugin name = " + ctx.getPluginInfo().getName());
 		return vendorFormList;
 	}
 
 	@Override
 	public List<ARVendorField> getMultipleFields(ARPluginContext ctx, VendorForm vendorForm) throws ARException {
-		if(debug) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getMultipleFields()");
+		if(DEBUG) ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getMultipleFields()");
 		return new ArrayList<>();
 	}
 }
