@@ -60,7 +60,7 @@ public class Config {
 		List<AREntry> arEntries = formConfig.getEntries();
 		for (AREntry arEntry : arEntries) {
 			String description = arEntry.getFieldStringValue("Description");
-			Map<String, String> fieldValues = new HashMap<String, String>();
+			Map<String, String> fieldValues = new HashMap<>();
 			for (String field : configFieldNames)
 				fieldValues.put(field, arEntry.getFieldStringValue(field));
 			config.put(description, fieldValues);

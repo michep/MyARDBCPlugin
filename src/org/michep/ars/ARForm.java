@@ -28,7 +28,7 @@ public class ARForm {
 
 	public List<AREntry> getEntries(String qual) throws ARException {
 		List<Entry> entries = adapter.getEntries(formName, qual, fields);
-		List<AREntry> arentries = new ArrayList<AREntry>();
+		List<AREntry> arentries = new ArrayList<>();
 		for (Entry entry : entries)
 			arentries.add(new AREntry(entry, fields, fieldList));
 		return arentries;
@@ -36,7 +36,7 @@ public class ARForm {
 	
 	public List<AREntry> getEntries(QualifierInfo qualInfo) throws ARException {
 		List<Entry> entries = adapter.getEntries(formName, qualInfo, fields);
-		List<AREntry> arentries = new ArrayList<AREntry>();
+		List<AREntry> arentries = new ArrayList<>();
 		for (Entry entry : entries)
 			arentries.add(new AREntry(entry, fields, fieldList));
 		return arentries;
