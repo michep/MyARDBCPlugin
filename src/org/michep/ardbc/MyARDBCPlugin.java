@@ -31,11 +31,12 @@ import com.bmc.arsys.pluginsvr.plugins.ARVendorField;
 public class MyARDBCPlugin extends ARDBCPlugin {
 	private Config config;
 	private ARAdapter adapter;
-	private static final boolean DEBUG = false;
-	private static final int QUERY_GUID_FIELDID = 400000777;
+	private boolean DEBUG = false;
+	private static int QUERY_GUID_FIELDID = 400000777;
 
 	@Override
 	public void initialize(ARPluginContext ctx) throws ARException {
+		DEBUG = Boolean.parseBoolean(ctx.getConfigItem("debug"));
 		if(DEBUG)
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "initialize()");
 
@@ -88,6 +89,11 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		if (DEBUG)
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "full qual = " + qual);
 
+		adaptSortInfo(sortList, mainForm);
+		mainQuery.setSortBy(sortList);
+		if (DEBUG)
+			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "sortInfo = " + sortList);
+		
 		List<Entry> entryList = new ArrayList<>();
 		Map<Integer, Value> values;
 		OutputInteger nMatch = new OutputInteger(1);
@@ -102,7 +108,12 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		return entryList;
 	}
 
-	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm subqueryForm) {
+	private void adaptSortInfo(List<SortInfo> inSort, QuerySourceForm form) {
+		for (int i = 0; i < inSort.size(); i++)
+			inSort.set(i, new SortInfo(inSort.get(i).getFieldID(), form, inSort.get(i).getSortOrder()));
+	}
+	
+	private void adaptQualifier(QualifierInfo inQual, QuerySourceForm form) {
 		int fieldId;
 		if (inQual == null)
 			return;
@@ -110,22 +121,22 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 		if (qualOperation == Constants.AR_COND_OP_NONE)
 			return;
 		if ((qualOperation == Constants.AR_COND_OP_AND) || (qualOperation == Constants.AR_COND_OP_OR)) {
-			adaptQualifier(inQual.getLeftOperand(), subqueryForm);
-			adaptQualifier(inQual.getRightOperand(), subqueryForm);
+			adaptQualifier(inQual.getLeftOperand(), form);
+			adaptQualifier(inQual.getRightOperand(), form);
 		}
 		if (qualOperation == Constants.AR_COND_OP_NOT)
-			adaptQualifier(inQual.getNotOperand(), subqueryForm);
+			adaptQualifier(inQual.getNotOperand(), form);
 		if (qualOperation == Constants.AR_COND_OP_REL_OP) {
 			ArithmeticOrRelationalOperand opLeft = inQual.getRelationalOperationInfo().getLeftOperand();
 			ArithmeticOrRelationalOperand opRight = inQual.getRelationalOperationInfo().getRightOperand();
 			if (opLeft.getType() == OperandType.FIELDID) {
 				fieldId = (Integer) opLeft.getValue();
-				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
+				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, form);
 				inQual.getRelationalOperationInfo().setLeftOperand(op);
 			}
 			if (opRight.getType() == OperandType.FIELDID) {
 				fieldId = (Integer) opRight.getValue();
-				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, subqueryForm);
+				ArithmeticOrRelationalOperand op = new ArithmeticOrRelationalOperand(fieldId, form);
 				inQual.getRelationalOperationInfo().setRightOperand(op);
 			}
 		}
