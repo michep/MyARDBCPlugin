@@ -46,6 +46,7 @@ public class MyARDBCPlugin extends ARDBCPlugin {
 
 	@Override
 	public List<Entry> getListEntryWithFields(ARPluginContext ctx, String tableName, List<ARVendorField> fieldsList, long transId, QualifierInfo qualifier, List<SortInfo> sortList, List<EntryListFieldInfo> getListFields, int startAt, int maxRetrieve, OutputInteger numMatches) throws ARException {
+		adapter.impersonateUser("");
 		if (DEBUG)
 			ctx.logMessage(ARPluginContext.PLUGIN_LOG_LEVEL_INFO, "getListEntryWithFields()==>formName=" + tableName + ";fieldList=" + fieldsList + ";transId=" + transId + ";qualifier=" + qualifier + ";sortList=" + sortList + ";getListFields=" + getListFields + ";startAt=" + startAt + ";maxRetrieve=" + maxRetrieve + ";numMatches=" + numMatches);
 
