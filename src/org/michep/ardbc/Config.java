@@ -39,7 +39,7 @@ public class Config {
 
 	private ARForm createConfigForm(ARPluginContext ctx) throws ARException {
 		Map<Integer, String> fields = new HashMap<>();
-		fields.put(8, "Description");
+		fields.put(8, "Name");
 		fields.put(400000000, "Primary Form Name");
 		fields.put(400000002, "Primary Form Relation FieldID");
 		fields.put(400000003, "Subquery Operation");
